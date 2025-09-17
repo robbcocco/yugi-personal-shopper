@@ -3,17 +3,14 @@
 import React, { useEffect, useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Progress } from '@/components/ui/progress';
-import { GitCompare, CheckCircle, AlertTriangle, Package, DollarSign, TrendingUp } from 'lucide-react';
+import { GitCompare, CheckCircle, AlertTriangle, Package, TrendingUp } from 'lucide-react';
 import { useAppStore } from '@/lib/store';
-import { compareCollectionWithDecks, groupCardsByType, ComparisonResult } from '@/lib/collection';
-import { CollectionCard } from '@/types/card-types';
+import { compareCollectionWithDecks, ComparisonResult } from '@/lib/collection';
 
 export default function CollectionComparison() {
   const { collection, deckList, setMissingCards, updateStepCompletion } = useAppStore();
   const [comparisonResult, setComparisonResult] = useState<ComparisonResult | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [selectedTab, setSelectedTab] = useState<'missing' | 'owned'>('missing');
   const [copied, setCopied] = useState(false);
 
   const handleCopy = async () => {
@@ -71,17 +68,6 @@ export default function CollectionComparison() {
       setIsLoading(false);
     }
   };
-
-  const formatCurrency = (value: number): string => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-      minimumFractionDigits: 2
-    }).format(value);
-  };
-
-  const groupedMissingCards = comparisonResult ? groupCardsByType(comparisonResult.missingCards) : {};
-  const groupedOwnedCards = comparisonResult ? groupCardsByType(comparisonResult.ownedCards) : {};
 
   if (isLoading) {
     return (
@@ -230,190 +216,6 @@ export default function CollectionComparison() {
         </Card>
       </div>
 
-      {/* Tab Navigation */}
-      {/* <div className="flex space-x-1 bg-gray-100 p-1 rounded-lg">
-        <button
-          onClick={() => setSelectedTab('missing')}
-          className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors ${
-            selectedTab === 'missing'
-              ? 'bg-white text-gray-900 shadow-sm'
-              : 'text-gray-500 hover:text-gray-700'
-          }`}
-        >
-          Missing Cards ({missingCards.length})
-        </button>
-        <button
-          onClick={() => setSelectedTab('owned')}
-          className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors ${
-            selectedTab === 'owned'
-              ? 'bg-white text-gray-900 shadow-sm'
-              : 'text-gray-500 hover:text-gray-700'
-          }`}
-        >
-          Owned Cards ({ownedCards.length})
-        </button>
-      </div> */}
-
-      {/* Cards Display */}
-      {/* <div className="space-y-4">
-        {selectedTab === 'missing' ? (
-          Object.keys(groupedMissingCards).length > 0 ? (
-            Object.entries(groupedMissingCards).map(([cardType, cards]) => (
-              <Card key={cardType}>
-                <CardHeader>
-                  <CardTitle className="text-lg">
-                    {cardType} ({cards.length} cards)
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                    {cards.map((card, index) => (
-                      <CardItem key={`${card.id}-${index}`} card={card} isMissing={true} />
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-            ))
-          ) : (
-            <Card>
-              <CardContent className="pt-6">
-                <div className="text-center py-8">
-                  <CheckCircle className="w-16 h-16 text-green-500 mx-auto mb-4" />
-                  <p className="text-xl font-semibold text-gray-900 mb-2">
-                    Collection Complete!
-                  </p>
-                  <p className="text-gray-500">
-                    You own all the cards needed for your deck lists.
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
-          )
-        ) : (
-          Object.keys(groupedOwnedCards).length > 0 ? (
-            Object.entries(groupedOwnedCards).map(([cardType, cards]) => (
-              <Card key={cardType}>
-                <CardHeader>
-                  <CardTitle className="text-lg">
-                    {cardType} ({cards.length} cards)
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                    {cards.map((card, index) => (
-                      <CardItem key={`${card.id}-${index}`} card={card} isMissing={false} />
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-            ))
-          ) : (
-            <Card>
-              <CardContent className="pt-6">
-                <div className="text-center py-8">
-                  <AlertTriangle className="w-16 h-16 text-yellow-500 mx-auto mb-4" />
-                  <p className="text-xl font-semibold text-gray-900 mb-2">
-                    No Owned Cards
-                  </p>
-                  <p className="text-gray-500">
-                    You don&apos;t own any of the cards needed for your deck lists.
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
-          )
-        )}
-      </div> */}
-
-      {/* Action Buttons */}
-      {/* <div className="flex justify-center space-x-4 pt-4">
-        <Button variant="outline" onClick={performComparison}>
-          Refresh Comparison
-        </Button>
-        {missingCards.length > 0 && (
-          <Button onClick={() => {
-            // This will be handled by the wizard navigation
-            // The next step (Price Comparison) will be automatically accessible
-          }}>
-            Find Best Prices
-          </Button>
-        )}
-      </div> */}
     </div>
   );
 }
-
-// interface CardItemProps {
-//   card: CollectionCard;
-//   isMissing: boolean;
-// }
-
-// function CardItem({ card, isMissing }: CardItemProps) {
-//   const getCardPrice = (card: CollectionCard): number => {
-//     if (!card.prices) return 0;
-    
-//     const prices = [
-//       card.prices.cardmarket_price,
-//       card.prices.tcgplayer_price,
-//       card.prices.ebay_price,
-//       card.prices.amazon_price,
-//       card.prices.coolstuffinc_price
-//     ].filter(price => price && parseFloat(price) > 0)
-//      .map(price => parseFloat(price!));
-     
-//     return prices.length > 0 ? Math.min(...prices) : 0;
-//   };
-
-//   const price = getCardPrice(card);
-//   const totalValue = price * card.quantity;
-
-//   return (
-//     <div className={`p-3 rounded-lg border-2 ${
-//       isMissing ? 'border-red-200 bg-red-50' : 'border-green-200 bg-green-50'
-//     }`}>
-//       <div className="flex justify-between items-start mb-2">
-//         <h4 className="font-medium text-gray-900 text-sm leading-tight">
-//           {card.name}
-//         </h4>
-//         <div className={`w-3 h-3 rounded-full ${
-//           isMissing ? 'bg-red-400' : 'bg-green-400'
-//         }`} />
-//       </div>
-      
-//       <div className="space-y-1 text-xs text-gray-600">
-//         <div className="flex justify-between">
-//           <span>Quantity:</span>
-//           <span className="font-medium">{card.quantity}</span>
-//         </div>
-        
-//         {card.type && (
-//           <div className="flex justify-between">
-//             <span>Type:</span>
-//             <span className="font-medium">{card.type}</span>
-//           </div>
-//         )}
-        
-//         {price > 0 && (
-//           <>
-//             <div className="flex justify-between">
-//               <span>Price:</span>
-//               <span className="font-medium">${price.toFixed(2)}</span>
-//             </div>
-//             <div className="flex justify-between">
-//               <span>Total:</span>
-//               <span className="font-medium text-blue-600">${totalValue.toFixed(2)}</span>
-//             </div>
-//           </>
-//         )}
-//       </div>
-      
-//       {card.attribute && (
-//         <div className="mt-2">
-//           <span className="inline-block px-2 py-1 text-xs bg-gray-200 text-gray-700 rounded">
-//             {card.attribute}
-//           </span>
-//         </div>
-//       )}
-//     </div>
-//   );
-// }

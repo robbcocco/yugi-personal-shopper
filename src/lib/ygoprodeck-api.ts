@@ -180,9 +180,36 @@ export async function getRandomCard(): Promise<CardData | null> {
   }
 }
 
-export async function scrapeYgoCollection(slug: string): Promise<number[]> {
-  // scrape the collection https://ygoprodeck.com/collection/share/{slug}
-  // and retrieve all the data-id from <div class="card-row" data-id="89538537">
+export async function scrapeYgoCollection(slug: string): Promise<Array<{ id: number; quantity: number }>> {
+  if (!slug || slug.trim() === '') {
+    throw new Error('Collection slug is required');
+  }
+
+  await rateLimiter.throttle();
+
+  try {
+    // Use our API route to bypass CORS restrictions
+    const response = await fetch(`/api/scrape-collection?slug=${encodeURIComponent(slug.trim())}`);
+    
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.error || `API request failed: ${response.status} ${response.statusText}`);
+    }
+    
+    const data = await response.json();
+    
+    if (!data.cards || !Array.isArray(data.cards)) {
+      throw new Error('Invalid response format from scraping API');
+    }
+    
+    return data.cards;
+  } catch (error) {
+    if (error instanceof Error) {
+      console.error('Error scraping YGOProDeck collection:', error.message);
+      throw new Error(`Failed to scrape collection data: ${error.message}`);
+    }
+    throw new Error('Unknown error occurred while scraping collection');
+  }
 }
 
 // Helper function to extract best price from card data

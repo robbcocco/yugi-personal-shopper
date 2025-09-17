@@ -74,7 +74,7 @@ export interface YDKData {
 export interface CollectionData {
   cards: CollectionCard[];
   totalCards: number;
-  importSource: 'csv' | 'manual';
+  importSource: 'csv' | 'manual' | 'ygoprodeck';
 }
 
 // Application state types

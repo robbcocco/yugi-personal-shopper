@@ -8,7 +8,7 @@ import { Upload, FileText } from 'lucide-react';
 import { parseCSVFile, validateFile, readFileAsText } from '@/lib/file-parsers';
 import { CollectionData } from '@/types/card-types';
 import { extractLastPathSegment } from '@/lib/utils';
-import { scrapeYgoCollection } from '@/lib/ygoprodeck-api';
+import { getCardsByIds, scrapeYgoCollection } from '@/lib/ygoprodeck-api';
 
 export default function CollectionImport() {
   const { setCollection, setError, setLoading, collection } = useAppStore();
@@ -88,16 +88,51 @@ export default function CollectionImport() {
     handleFiles(e.target.files);
   }, [handleFiles]);
 
-  const importFromYGOProDeck = useCallback(() => {
-    const cardIds = scrapeYgoCollection(slug);
-    console.log(cardIds)
-    const emptyCollection: CollectionData = {
-      cards: [],
-      totalCards: 0,
-      importSource: 'manual'
-    };
-    setCollection(emptyCollection);
-  }, [setCollection, slug]);
+  const importFromYGOProDeck = useCallback(async () => {
+    if (!slug.trim()) {
+      setError('Please enter a collection ID');
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
+
+    try {
+      const cards = await scrapeYgoCollection(slug);
+
+      if (cards.length === 0) {
+        setError('No cards found in the collection. Please check the collection ID.');
+        return;
+      }
+
+      const cardIds = cards.map(c => c.id);
+      const allCards = await getCardsByIds(cardIds);
+      const collectionCards = cards.map((card) => {
+        const c = allCards.find(c => c.id == card.id);
+        if (c) {
+          return {
+            ...c, quantity: card.quantity, owned: true
+          }
+        }
+      })
+
+      // Create collection data with the scraped card data
+      // For now, we'll create a basic collection structure
+      // You might want to fetch full card details using getCardsByIds later
+      const collectionData: CollectionData = {
+        cards: collectionCards.filter(c => !!c),
+        totalCards: cards.reduce((sum, card) => sum + card.quantity, 0),
+        importSource: 'ygoprodeck'
+      };
+
+      setCollection(collectionData);
+    } catch (error) {
+      console.error('Error importing from YGOProDeck:', error);
+      setError(error instanceof Error ? error.message : 'Failed to import collection');
+    } finally {
+      setLoading(false);
+    }
+  }, [setCollection, setError, setLoading, slug]);
 
   const skipStep = useCallback(() => {
     // Create empty collection to proceed
@@ -138,7 +173,7 @@ export default function CollectionImport() {
                 id="file-upload"
                 className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
                 onChange={handleChange}
-                accept=".csv,.txt"
+                accept=".csv"
                 multiple={false}
               />
 
@@ -163,7 +198,7 @@ export default function CollectionImport() {
           className="flex w-full mr-12"
           role="group"
           aria-label="URL input"
-          // onClick={() => inputRef.current?.focus()}
+        // onClick={() => inputRef.current?.focus()}
         >
           {/* Fixed prefix (uneditable) */}
           <span
@@ -203,7 +238,7 @@ export default function CollectionImport() {
           className="flex items-center space-x-2"
         >
           <FileText className="w-4 h-4" />
-          <span>Use empty collection</span>
+          <span>Empty collection</span>
         </Button>
       </div>
     </div>

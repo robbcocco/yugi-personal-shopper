@@ -98,7 +98,7 @@ export default function DeckInput() {
                 id="file-upload"
                 className="sr-only"
                 onChange={handleChange}
-                accept=".csv,.txt,.ydk"
+                accept=".txt,.ydk"
                 multiple={false}
               />
 
