@@ -134,10 +134,10 @@ export default function CollectionImport() {
                 <Upload className="w-12 h-12 text-gray-400 mx-auto" />
                 <div className="space-y-2">
                   <p className="text-lg font-medium text-gray-900">
-                    Drop your DECK file here, or click to browse
+                    Drop your collection file here, or click to browse
                   </p>
                   <p className="text-sm text-gray-500">
-                    Supports text and .YDK files up to 10MB
+                    Supports .CSV files up to 10MB
                   </p>
                 </div>
               </div>
@@ -191,7 +191,7 @@ export default function CollectionImport() {
           className="flex items-center space-x-2"
         >
           <FileText className="w-4 h-4" />
-          <span>Skip Collection Import</span>
+          <span>Use empty collection</span>
         </Button>
       </div>
     </div>

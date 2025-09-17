@@ -121,6 +121,16 @@ export const useAppStore = create<AppStore>((set, get) => ({
 
   setMissingCards: (cards: CollectionCard[]) => {
     set({ missingCards: cards });
+    
+    // Update step completion and accessibility for price comparison
+    if (cards.length > 0) {
+      // Make price comparison step accessible since we have missing cards
+      set(state => ({
+        wizardSteps: state.wizardSteps.map(step => 
+          step.id === 4 ? { ...step, isAccessible: true } : step
+        )
+      }));
+    }
   },
 
   setLoading: (loading: boolean) => {

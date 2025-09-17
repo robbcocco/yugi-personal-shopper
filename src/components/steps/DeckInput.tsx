@@ -104,7 +104,7 @@ export default function DeckInput() {
               <div className="space-y-4">
                 <div className="space-y-2">
                   <p className="text-lg font-medium text-gray-900">
-                    Drop your .ydk here, or click to browse
+                    Drop your deck here, or click to browse
                   </p>
                 </div>
               </div>
