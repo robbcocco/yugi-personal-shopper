@@ -8,7 +8,7 @@ import { Upload, FileText } from 'lucide-react';
 import { parseCSVFile, validateFile, readFileAsText } from '@/lib/file-parsers';
 import { CollectionData } from '@/types/card-types';
 import { extractLastPathSegment } from '@/lib/utils';
-import { getCardsByIds, scrapeYgoCollection } from '@/lib/ygoprodeck-api';
+// import { getCardsByIds, scrapeYgoCollection } from '@/lib/ygoprodeck-api';
 
 export default function CollectionImport() {
   const { setCollection, setError, setLoading, collection } = useAppStore();
@@ -88,51 +88,51 @@ export default function CollectionImport() {
     handleFiles(e.target.files);
   }, [handleFiles]);
 
-  const importFromYGOProDeck = useCallback(async () => {
-    if (!slug.trim()) {
-      setError('Please enter a collection ID');
-      return;
-    }
+  // const importFromYGOProDeck = useCallback(async () => {
+  //   if (!slug.trim()) {
+  //     setError('Please enter a collection ID');
+  //     return;
+  //   }
 
-    setLoading(true);
-    setError(null);
+  //   setLoading(true);
+  //   setError(null);
 
-    try {
-      const cards = await scrapeYgoCollection(slug);
+  //   try {
+  //     const cards = await scrapeYgoCollection(slug);
 
-      if (cards.length === 0) {
-        setError('No cards found in the collection. Please check the collection ID.');
-        return;
-      }
+  //     if (cards.length === 0) {
+  //       setError('No cards found in the collection. Please check the collection ID.');
+  //       return;
+  //     }
 
-      const cardIds = cards.map(c => c.id);
-      const allCards = await getCardsByIds(cardIds);
-      const collectionCards = cards.map((card) => {
-        const c = allCards.find(c => c.id == card.id);
-        if (c) {
-          return {
-            ...c, quantity: card.quantity, owned: true
-          }
-        }
-      })
+  //     const cardIds = cards.map(c => c.id);
+  //     const allCards = await getCardsByIds(cardIds);
+  //     const collectionCards = cards.map((card) => {
+  //       const c = allCards.find(c => c.id == card.id);
+  //       if (c) {
+  //         return {
+  //           ...c, quantity: card.quantity, owned: true
+  //         }
+  //       }
+  //     })
 
-      // Create collection data with the scraped card data
-      // For now, we'll create a basic collection structure
-      // You might want to fetch full card details using getCardsByIds later
-      const collectionData: CollectionData = {
-        cards: collectionCards.filter(c => !!c),
-        totalCards: cards.reduce((sum, card) => sum + card.quantity, 0),
-        importSource: 'ygoprodeck'
-      };
+  //     // Create collection data with the scraped card data
+  //     // For now, we'll create a basic collection structure
+  //     // You might want to fetch full card details using getCardsByIds later
+  //     const collectionData: CollectionData = {
+  //       cards: collectionCards.filter(c => !!c),
+  //       totalCards: cards.reduce((sum, card) => sum + card.quantity, 0),
+  //       importSource: 'ygoprodeck'
+  //     };
 
-      setCollection(collectionData);
-    } catch (error) {
-      console.error('Error importing from YGOProDeck:', error);
-      setError(error instanceof Error ? error.message : 'Failed to import collection');
-    } finally {
-      setLoading(false);
-    }
-  }, [setCollection, setError, setLoading, slug]);
+  //     setCollection(collectionData);
+  //   } catch (error) {
+  //     console.error('Error importing from YGOProDeck:', error);
+  //     setError(error instanceof Error ? error.message : 'Failed to import collection');
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // }, [setCollection, setError, setLoading, slug]);
 
   const skipStep = useCallback(() => {
     // Create empty collection to proceed
@@ -212,8 +212,9 @@ export default function CollectionImport() {
           {/* Editable tail */}
           <input
             id="company-website"
+            disabled
             type="text"
-            placeholder="collectionId"
+            placeholder=" won't work on gh pages :("
             value={slug}
             onChange={(e) => setSlug(e.target.value)}
             onPaste={handlePaste}
@@ -223,8 +224,9 @@ export default function CollectionImport() {
 
           {/* Action */}
           <Button
+            disabled
             variant="outline"
-            onClick={importFromYGOProDeck}
+            // onClick={importFromYGOProDeck}
             type="submit"
             className="rounded-l-none -ml-px"
           >
