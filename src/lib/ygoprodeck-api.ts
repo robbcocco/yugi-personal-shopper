@@ -97,7 +97,8 @@ export async function getCardsByNames(names: string[]): Promise<CardData[]> {
   if (names.length === 0) return [];
   
   try {
-    const namesString = names.map(name => encodeURIComponent(name)).join('|');
+    const namesString = names.map(name => encodeURIComponent(decodeHtml(name))).join('|');
+    // const namesString = names.map(name => encodeURIComponent(name)).join('|');
     const response = await apiRequest<YGOProDeckResponse>(
       `${BASE_URL}/cardinfo.php?name=${namesString}`
     );
@@ -113,7 +114,8 @@ export async function searchCardsByName(searchTerm: string): Promise<CardData[]>
   if (!searchTerm.trim()) return [];
   
   try {
-    const encodedTerm = encodeURIComponent(searchTerm);
+    const encodedTerm = encodeURIComponent(decodeHtml(searchTerm));
+    // const encodedTerm = encodeURIComponent(searchTerm);
     const response = await apiRequest<YGOProDeckResponse>(
       `${BASE_URL}/cardinfo.php?fname=${encodedTerm}`
     );
@@ -178,6 +180,11 @@ export async function getRandomCard(): Promise<CardData | null> {
   }
 }
 
+export async function scrapeYgoCollection(slug: string): Promise<number[]> {
+  // scrape the collection https://ygoprodeck.com/collection/share/{slug}
+  // and retrieve all the data-id from <div class="card-row" data-id="89538537">
+}
+
 // Helper function to extract best price from card data
 export function getBestPrice(card: CardData): { price: number; source: string; currency: string } | null {
   if (!card.card_prices || card.card_prices.length === 0) {
@@ -226,4 +233,8 @@ export function getAllPrices(card: CardData): Array<{ price: number; source: str
       price: parseFloat(option.price!)
     }))
     .sort((a, b) => a.price - b.price);
+}
+
+function decodeHtml(s: string) {
+  return s.replaceAll("&amp;", "&")
 }

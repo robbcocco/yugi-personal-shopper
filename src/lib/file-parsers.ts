@@ -1,7 +1,7 @@
 import { YDKData, CollectionData, CollectionCard, FileUploadResult, DeckListData, YGOProDeckCSVCard } from '@/types/card-types';
 import { parse } from "csv-parse/sync";
-import { getCardsByIds } from './ygoprodeck-api';
-import { attachQuantities } from './collection';
+import { getCardsByIds, getCardsByNames, searchCardsByName } from './ygoprodeck-api';
+import { attachQuantities, isNotCard } from './collection';
 
 
 // YDK file parser
@@ -57,14 +57,27 @@ export async function parseYDKFile(fileName: string, fileContent: string): Promi
 }
 
 // Parse text input for deck lists
-export function parseTextDeckList(textContent: string): FileUploadResult {
+export async function parseTextDeckList(fileName: string, textContent: string): Promise<FileUploadResult> {
   try {
     const lines = textContent.split('\n').map(line => line.trim()).filter(line => line);
     const cards: CollectionCard[] = [];
 
+    // Remove numbers and try to get cards' exact name
+    const cardNames = lines
+      .filter(cardName => !isNotCard(cardName))
+      .map((cardName) => {
+        return cardName
+          // remove leading "3x " or "3 "
+          .replace(/^\s*\d+\s*[x×]?\s*/i, "")
+          // remove trailing " x3" or " (3)"
+          .replace(/\s*(?:[x×]\s*\d+|\(\s*\d+\s*\))\s*$/i, "")
+          .trim();
+      })
+    const allCardsByNames = await getCardsByNames(cardNames);
+
     for (const line of lines) {
       // Skip empty lines and comments
-      if (!line || line.startsWith('#') || line.startsWith('//')) {
+      if (!line || isNotCard(line)) {
         continue;
       }
 
@@ -101,22 +114,29 @@ export function parseTextDeckList(textContent: string): FileUploadResult {
       cardName = cardName.trim();
       if (!cardName) continue;
 
-      const card: CollectionCard = {
-        id: 0, // Will be populated when validated against API
-        name: cardName,
-        type: '',
-        frameType: '',
-        desc: '',
-        race: '',
+      let card = allCardsByNames.find(c => c.name.trim().toLowerCase() == cardName.trim().toLowerCase());
+
+      if (!card) {
+        const cards = await searchCardsByName(cardName);
+        if (cards.length > 0) {
+          card = cards[0];
+        }
+      }
+
+      if (!card) continue;
+
+      const collectionCard: CollectionCard = {
+        ...card,
         quantity,
         owned: false
       };
 
-      cards.push(card);
+      cards.push(collectionCard);
     }
 
     // Simple deck list structure (all in main deck for now)
     const deckData: DeckListData = {
+      name: fileName,
       main: cards,
       extra: [],
       side: []
@@ -164,20 +184,17 @@ export function parseCSVFile(fileContent: string): FileUploadResult {
 
     console.log(lines.length)
     
-    // Parse data rows (skip header)
-    for (let i = 1; i < lines.length; i++) {
-      const line = lines[i];
-      
+    for (const line of lines) {
       const cardName = line.cardname;
       if (!cardName) continue;
 
       // Extract quantity if present in the name (e.g., "3x Blue-Eyes White Dragon")
-      const quantityMatch = cardName.match(/^(\d+)x?\s+(.+)$/);
-      const cleanName = quantityMatch ? quantityMatch[2] : cardName;
+      // const quantityMatch = cardName.match(/^(\d+)x?\s+(.+)$/);
+      // const cleanName = quantityMatch ? quantityMatch[2] : cardName;
 
       const card: CollectionCard = {
         id: 0, // Will be populated when validated against API
-        name: cleanName,
+        name: cardName,
         type: '',
         frameType: '',
         desc: '',
@@ -213,39 +230,6 @@ export function parseCSVFile(fileContent: string): FileUploadResult {
     };
   }
 }
-
-// Helper function to parse CSV line with proper quote handling
-// function parseCSVLine(line: string): string[] {
-//   const result: string[] = [];
-//   let current = '';
-//   let inQuotes = false;
-  
-//   for (let i = 0; i < line.length; i++) {
-//     const char = line[i];
-    
-//     if (char === '"') {
-//       if (inQuotes && line[i + 1] === '"') {
-//         // Escaped quote
-//         current += '"';
-//         i++; // Skip next quote
-//       } else {
-//         // Toggle quote state
-//         inQuotes = !inQuotes;
-//       }
-//     } else if (char === ',' && !inQuotes) {
-//       // End of field
-//       result.push(current);
-//       current = '';
-//     } else {
-//       current += char;
-//     }
-//   }
-  
-//   // Add last field
-//   result.push(current);
-  
-//   return result;
-// }
 
 // File type detection
 export function detectFileType(fileName: string, content?: string): 'ydk' | 'csv' | 'txt' | 'unknown' {

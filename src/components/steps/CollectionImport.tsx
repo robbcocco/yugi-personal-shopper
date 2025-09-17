@@ -8,6 +8,7 @@ import { Upload, FileText } from 'lucide-react';
 import { parseCSVFile, validateFile, readFileAsText } from '@/lib/file-parsers';
 import { CollectionData } from '@/types/card-types';
 import { extractLastPathSegment } from '@/lib/utils';
+import { scrapeYgoCollection } from '@/lib/ygoprodeck-api';
 
 export default function CollectionImport() {
   const { setCollection, setError, setLoading, collection } = useAppStore();
@@ -87,6 +88,17 @@ export default function CollectionImport() {
     handleFiles(e.target.files);
   }, [handleFiles]);
 
+  const importFromYGOProDeck = useCallback(() => {
+    const cardIds = scrapeYgoCollection(slug);
+    console.log(cardIds)
+    const emptyCollection: CollectionData = {
+      cards: [],
+      totalCards: 0,
+      importSource: 'manual'
+    };
+    setCollection(emptyCollection);
+  }, [setCollection, slug]);
+
   const skipStep = useCallback(() => {
     // Create empty collection to proceed
     const emptyCollection: CollectionData = {
@@ -102,7 +114,7 @@ export default function CollectionImport() {
 
       <div className='grid grid-cols-6 gap-6'>
         <Card className='col-span-4'>
-          <CardContent className="pt-6 h-[calc(100dvh-33rem)] overflow-y-auto overscroll-contain">
+          <CardContent className="pt-6 h-[calc(100dvh-30rem)] overflow-y-auto overscroll-contain">
             {collection && collection.cards.map((card, index) => (
               <p key={index}>{card.quantity}x {card.name}</p>
             ))}
@@ -137,7 +149,7 @@ export default function CollectionImport() {
                     Drop your collection file here, or click to browse
                   </p>
                   <p className="text-sm text-gray-500">
-                    Supports .CSV files up to 10MB
+                    {`Supports .CSV files up to 10MB, requires 'cardname' header`}
                   </p>
                 </div>
               </div>
@@ -177,7 +189,7 @@ export default function CollectionImport() {
           {/* Action */}
           <Button
             variant="outline"
-            onClick={skipStep}
+            onClick={importFromYGOProDeck}
             type="submit"
             className="rounded-l-none -ml-px"
           >

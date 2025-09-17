@@ -114,6 +114,7 @@ export interface  YGOProDeckCSVCard {
 
 // Deck list with CollectionCard (for text parsing)
 export interface DeckListData {
+  name?: string;
   main: CollectionCard[];
   extra: CollectionCard[];
   side: CollectionCard[];

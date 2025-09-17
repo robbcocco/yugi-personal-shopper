@@ -135,7 +135,7 @@ export function compareCollectionWithDecks(
     const ownedCard = ownedCardsMap.get(normalizedName);
 
     if (!ownedCard) {
-      totalNeeded = +totalNeeded+requiredCard.quantity;
+      totalNeeded = +totalNeeded + requiredCard.quantity;
       // Card not owned at all
       missingCards.push({
         ...requiredCard,
@@ -144,11 +144,11 @@ export function compareCollectionWithDecks(
     } else {
       const availableQuantity = +ownedCard.quantity;
       const neededQuantity = +requiredCard.quantity;
-      
+
       if (availableQuantity >= neededQuantity) {
         // Have enough of this card
         // totalNeeded += neededQuantity;
-        totalOwned = +totalOwned+neededQuantity;
+        totalOwned = +totalOwned + neededQuantity;
         ownedCards.push({
           ...requiredCard,
           owned: true,
@@ -156,14 +156,14 @@ export function compareCollectionWithDecks(
         });
       } else {
         // Have some but not enough
-        totalOwned = +totalOwned+availableQuantity;
+        totalOwned = +totalOwned + availableQuantity;
         ownedCards.push({
           ...requiredCard,
           owned: true,
           quantity: availableQuantity
         });
 
-        totalNeeded = +totalNeeded+(neededQuantity-availableQuantity);
+        totalNeeded = +totalNeeded + (neededQuantity - availableQuantity);
         missingCards.push({
           ...requiredCard,
           owned: false,
@@ -173,19 +173,29 @@ export function compareCollectionWithDecks(
     }
   }
 
-  const completionPercentage = +totalNeeded+totalOwned > 0 ? Math.round((totalOwned / (+totalNeeded+totalOwned)) * 100) : 100;
+  const completionPercentage = +totalNeeded + totalOwned > 0 ? Math.round((totalOwned / (+totalNeeded + totalOwned)) * 100) : 100;
 
   return {
     missingCards,
     ownedCards,
     totalMissingValue: calculateTotalValue(missingCards),
     statistics: {
-      total: +totalNeeded+totalOwned,
+      total: +totalNeeded + totalOwned,
       totalNeeded,
       totalOwned,
       completionPercentage
     }
   };
+}
+
+export function isNotCard(cardName: string): boolean {
+  return cardName.startsWith('#') || cardName.startsWith('//') || cardName.startsWith('-') ||
+    cardName.toLowerCase().includes('main deck') ||
+    cardName.toLowerCase().includes('maindeck') ||
+    cardName.toLowerCase().includes('extra deck') ||
+    cardName.toLowerCase().includes('extradeck') ||
+    cardName.toLowerCase().includes('side deck') ||
+    cardName.toLowerCase().includes('sidedeck')
 }
 
 /**
@@ -203,7 +213,7 @@ function calculateTotalValue(cards: CollectionCard[]): number {
  */
 function getCardPrice(card: CollectionCard): number {
   if (!card.prices) return 0;
-  
+
   const prices = [
     card.prices.cardmarket_price,
     card.prices.tcgplayer_price,
@@ -211,8 +221,8 @@ function getCardPrice(card: CollectionCard): number {
     card.prices.amazon_price,
     card.prices.coolstuffinc_price
   ].filter(price => price && parseFloat(price) > 0)
-   .map(price => parseFloat(price!));
-   
+    .map(price => parseFloat(price!));
+
   return prices.length > 0 ? Math.min(...prices) : 0;
 }
 
