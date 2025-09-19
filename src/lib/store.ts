@@ -4,7 +4,7 @@ import { AppState, CollectionData, DeckList, CollectionCard, WizardStep } from '
 interface AppStore extends AppState {
   // State setters
   setCurrentStep: (step: number) => void;
-  setCollection: (collection: CollectionData | null) => void;
+  setCollection: (collection: CollectionData[]) => void;
   setDeckList: (deckList: DeckList[]) => void;
   setMissingCards: (cards: CollectionCard[]) => void;
   setLoading: (loading: boolean) => void;
@@ -59,7 +59,7 @@ const initialWizardSteps: WizardStep[] = [
 export const useAppStore = create<AppStore>((set, get) => ({
   // Initial state
   currentStep: 1,
-  collection: null,
+  collection: [],
   deckList: [],
   missingCards: [],
   isLoading: false,
@@ -71,7 +71,7 @@ export const useAppStore = create<AppStore>((set, get) => ({
     set({ currentStep: step });
   },
 
-  setCollection: (collection: CollectionData | null) => {
+  setCollection: (collection: CollectionData[]) => {
     set({ collection });
 
     // console.log(collection)
@@ -162,7 +162,7 @@ export const useAppStore = create<AppStore>((set, get) => ({
   resetApp: () => {
     set({
       currentStep: 1,
-      collection: null,
+      collection: [],
       deckList: [],
       missingCards: [],
       isLoading: false,

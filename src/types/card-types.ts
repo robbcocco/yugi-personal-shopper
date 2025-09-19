@@ -80,7 +80,7 @@ export interface CollectionData {
 // Application state types
 export interface AppState {
   currentStep: number;
-  collection: CollectionData | null;
+  collection: CollectionData[];
   deckList: DeckList[];
   missingCards: CollectionCard[];
   isLoading: boolean;

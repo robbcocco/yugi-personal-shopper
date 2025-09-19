@@ -7,6 +7,43 @@ type MergeOptions = {
   sortBy?: "none" | "alpha" | "qtyDesc";
 };
 
+export function mergeCollectionLists(
+  decks: CollectionData[],
+  options: MergeOptions = { sortBy: "none" }
+): CollectionCard[] {
+  const normalize =
+    options.normalizer ?? ((s: string) => s); // default: exact match
+
+  const order: string[] = []; // keep stable first-seen order
+  const map = new Map<string, CollectionCard>();
+
+  for (const deck of decks) {
+    for (const card of deck.cards) {
+      const key = normalize(card.name);
+      const qty = card.quantity ?? 0;
+
+      if (!map.has(key)) {
+        map.set(key, { ...card, quantity: 0 });
+        order.push(key);
+      }
+      map.get(key)!.quantity += qty;
+    }
+  }
+
+  let result = order.map((k) => map.get(k)!);
+
+  switch (options.sortBy ?? "none") {
+    case "alpha":
+      result = [...result].sort((a, b) => a.name.localeCompare(b.name));
+      break;
+    case "qtyDesc":
+      result = [...result].sort((a, b) => b.quantity - a.quantity);
+      break;
+  }
+
+  return result;
+}
+
 export function mergeDeckLists(
   decks: DeckList[],
   options: MergeOptions = { sortBy: "none" }
@@ -89,9 +126,15 @@ export interface ComparisonResult {
  * Compare deck requirements with user's collection to find missing cards
  */
 export function compareCollectionWithDecks(
-  collection: CollectionData | null,
+  collection: CollectionData[],
   deckLists: DeckList[]
 ): ComparisonResult {
+  // Merge all deck lists into a single required cards list
+  const collectionCards = mergeCollectionLists(collection, {
+    normalizer: (name) => name.toLowerCase().trim(),
+    // sortBy: "alpha"
+  });
+
   // Merge all deck lists into a single required cards list
   const requiredCards = mergeDeckLists(deckLists, {
     normalizer: (name) => name.toLowerCase().trim(),
@@ -99,7 +142,7 @@ export function compareCollectionWithDecks(
   });
 
   // If no collection, all cards are missing
-  if (!collection || !collection.cards.length) {
+  if (!collection || !collectionCards.length) {
     return {
       missingCards: requiredCards.map(card => ({ ...card, owned: false })),
       ownedCards: [],
@@ -115,7 +158,7 @@ export function compareCollectionWithDecks(
 
   // Create a map of owned cards for quick lookup
   const ownedCardsMap = new Map<string, CollectionCard>();
-  collection.cards.forEach(card => {
+  collectionCards.forEach(card => {
     const normalizedName = card.name.toLowerCase().trim();
     const existing = ownedCardsMap.get(normalizedName);
     if (existing) {

@@ -8,6 +8,7 @@ import { Upload, FileText } from 'lucide-react';
 import { parseCSVFile, validateFile, readFileAsText } from '@/lib/file-parsers';
 import { CollectionData } from '@/types/card-types';
 import { extractLastPathSegment } from '@/lib/utils';
+import { mergeCollectionLists } from '@/lib/collection';
 // import { getCardsByIds, scrapeYgoCollection } from '@/lib/ygoprodeck-api';
 
 export default function CollectionImport() {
@@ -54,7 +55,7 @@ export default function CollectionImport() {
 
       if (result.success && result.data) {
         const collectionData = result.data as CollectionData;
-        setCollection(collectionData);
+        setCollection(collection.concat(collectionData));
         setError(null);
       } else {
         setError(result.error || 'Failed to parse file');
@@ -64,7 +65,7 @@ export default function CollectionImport() {
     } finally {
       setLoading(false);
     }
-  }, [setCollection, setError, setLoading]);
+  }, [collection, setCollection, setError, setLoading]);
 
   const handleDrag = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -135,13 +136,7 @@ export default function CollectionImport() {
   // }, [setCollection, setError, setLoading, slug]);
 
   const skipStep = useCallback(() => {
-    // Create empty collection to proceed
-    const emptyCollection: CollectionData = {
-      cards: [],
-      totalCards: 0,
-      importSource: 'manual'
-    };
-    setCollection(emptyCollection);
+    setCollection([]);
   }, [setCollection]);
 
   return (
@@ -150,7 +145,7 @@ export default function CollectionImport() {
       <div className='grid grid-cols-6 gap-6'>
         <Card className='col-span-4'>
           <CardContent className="pt-6 h-[calc(100dvh-30rem)] overflow-y-auto overscroll-contain">
-            {collection && collection.cards.map((card, index) => (
+            {collection.length > 0 && mergeCollectionLists(collection).map((card, index) => (
               <p key={index}>{card.quantity}x {card.name}</p>
             ))}
           </CardContent>
