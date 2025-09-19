@@ -8,7 +8,7 @@ type MergeOptions = {
 };
 
 export function mergeCollectionLists(
-  decks: CollectionData[],
+  collections: CollectionData[],
   options: MergeOptions = { sortBy: "none" }
 ): CollectionCard[] {
   const normalize =
@@ -17,8 +17,8 @@ export function mergeCollectionLists(
   const order: string[] = []; // keep stable first-seen order
   const map = new Map<string, CollectionCard>();
 
-  for (const deck of decks) {
-    for (const card of deck.cards) {
+  for (const collection of collections) {
+    for (const card of collection.cards) {
       const key = normalize(card.name);
       const qty = card.quantity ?? 0;
 

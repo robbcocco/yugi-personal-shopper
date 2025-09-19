@@ -72,6 +72,7 @@ export interface YDKData {
 
 // Collection import data
 export interface CollectionData {
+  name?: string;
   cards: CollectionCard[];
   totalCards: number;
   importSource: 'csv' | 'manual' | 'ygoprodeck';
@@ -103,7 +104,7 @@ export interface YGOProDeckResponse {
 
 export interface  YGOProDeckCSVCard {
   cardname: string;
-  cardq: number;
+  cardq: string;
   cardrarity: string;
   card_edition: string;
   cardset: string;

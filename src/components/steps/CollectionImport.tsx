@@ -55,7 +55,12 @@ export default function CollectionImport() {
 
       if (result.success && result.data) {
         const collectionData = result.data as CollectionData;
-        setCollection(collection.concat(collectionData));
+        // Add a name to the collection based on the file name
+        const namedCollection = {
+          ...collectionData,
+          name: file.name.replace(/\.[^/.]+$/, '') // Remove file extension
+        };
+        setCollection(collection.concat(namedCollection));
         setError(null);
       } else {
         setError(result.error || 'Failed to parse file');
@@ -135,6 +140,10 @@ export default function CollectionImport() {
   //   }
   // }, [setCollection, setError, setLoading, slug]);
 
+  const onRemoveCollection = (i: number) => {
+    setCollection(collection.filter((_, index) => index !== i));
+  };
+
   const skipStep = useCallback(() => {
     setCollection([]);
   }, [setCollection]);
@@ -143,18 +152,10 @@ export default function CollectionImport() {
     <div className="space-y-6">
 
       <div className='grid grid-cols-6 gap-6'>
-        <Card className='col-span-4'>
-          <CardContent className="pt-6 h-[calc(100dvh-30rem)] overflow-y-auto overscroll-contain">
-            {collection.length > 0 && mergeCollectionLists(collection).map((card, index) => (
-              <p key={index}>{card.quantity}x {card.name}</p>
-            ))}
-          </CardContent>
-        </Card>
-
         <Card className='col-span-2'>
           <CardContent className="pt-6">
             <div
-              className={`relative border-2 border-dashed rounded-lg p-8 text-center transition-colors ${dragActive
+              className={`relative h-[calc(100dvh-30rem)] overflow-y-auto overscroll-contain border-2 border-dashed rounded-lg p-4 text-center transition-colors ${dragActive
                 ? 'border-blue-500 bg-blue-50'
                 : 'border-gray-300 hover:border-gray-400'
                 }`}
@@ -163,27 +164,77 @@ export default function CollectionImport() {
               onDragOver={handleDrag}
               onDrop={handleDrop}
             >
+              {/* Hidden input; triggered by labels */}
               <input
                 type="file"
                 id="file-upload"
-                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                className="sr-only"
                 onChange={handleChange}
                 accept=".csv"
                 multiple={false}
               />
 
-              <div className="space-y-4">
-                <Upload className="w-12 h-12 text-gray-400 mx-auto" />
-                <div className="space-y-2">
-                  <p className="text-lg font-medium text-gray-900">
-                    Drop your collection file here, or click to browse
-                  </p>
-                  <p className="text-sm text-gray-500">
-                    {`Supports .CSV files up to 10MB, requires 'cardname' header`}
-                  </p>
+              {/* Optional visual overlay when dragging (doesn't block clicks) */}
+              {dragActive && (
+                <div className="pointer-events-none absolute inset-0 rounded-lg ring-2 ring-blue-500 ring-offset-2" />
+              )}
+
+              {collection && collection.length > 0 ? (
+                <div className="text-left">
+                  <div className="mb-4 flex items-center justify-between">
+                    <h3 className="text-sm font-medium">Collections</h3>
+                    {/* Click to open file picker */}
+                    <label
+                      htmlFor="file-upload"
+                      className="cursor-pointer text-sm text-blue-600 hover:underline"
+                    >
+                      Add collection
+                    </label>
+                  </div>
+
+                  {collection.map((coll, index) => (
+                    <Card key={index} className="mb-2">
+                      <CardContent className="flex items-start justify-between p-2">
+                        <h4 className="truncate text-sm font-medium">{coll.name || `Collection ${index + 1}`}</h4>
+                        <button
+                          type="button"
+                          onClick={() => onRemoveCollection(index)}
+                          className="text-xs text-red-600 hover:text-red-800"
+                        >
+                          X
+                        </button>
+                      </CardContent>
+                    </Card>
+                  ))}
                 </div>
-              </div>
+              ) : (
+                <div className="space-y-4">
+                  <Upload className="w-8 h-8 text-gray-400 mx-auto" />
+                  <div className="space-y-2">
+                    <p className="text-sm font-medium text-gray-900">
+                      Drop your collection here, or{" "}
+                      <label
+                        htmlFor="file-upload"
+                        className="cursor-pointer text-blue-600 underline"
+                      >
+                        browse
+                      </label>
+                    </p>
+                    <p className="text-xs text-gray-500">
+                      {`CSV files, requires 'cardname' header`}
+                    </p>
+                  </div>
+                </div>
+              )}
             </div>
+          </CardContent>
+        </Card>
+
+        <Card className='col-span-4'>
+          <CardContent className="pt-6 h-[calc(100dvh-30rem)] overflow-y-auto overscroll-contain">
+            {collection.length > 0 && mergeCollectionLists(collection).map((card, index) => (
+              <p key={index}>{card.quantity}x {card.name}</p>
+            ))}
           </CardContent>
         </Card>
       </div>
@@ -209,7 +260,7 @@ export default function CollectionImport() {
             id="company-website"
             disabled
             type="text"
-            placeholder=" won't work on gh pages :("
+            placeholder=" won&apos;t work on gh pages :("
             value={slug}
             onChange={(e) => setSlug(e.target.value)}
             onPaste={handlePaste}

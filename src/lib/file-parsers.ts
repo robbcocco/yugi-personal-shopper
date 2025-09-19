@@ -199,7 +199,7 @@ export function parseCSVFile(fileContent: string): FileUploadResult {
         frameType: '',
         desc: '',
         race: '',
-        quantity: line.cardq,
+        quantity: parseInt(line.cardq) || 1,
         owned: true,
         // sets: columns[1] ? [{
         //   set_name: columns[1],
